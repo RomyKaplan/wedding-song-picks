@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8">
+  <style>
+    :root {font-family:system-ui,-apple-system,'Segoe UI',Arial,sans-serif;color:#29242b;background:#fcf8f8}
+    * {box-sizing:border-box}
+    body{margin:0;min-height:100vh;padding:22px 14px 55px;background:radial-gradient(circle at 15% 8%,#f8e3e9,transparent 45%),#fcf8f8}
+    main{max-width:540px;margin:0 auto;background:white;border:1px solid #f3e3e6;box-shadow:0 12px 40px #54333d0c;border-radius:24px;padding:27px 21px}
+    .head{text-align:center;margin-bottom:24px}.symbol{font-size:37px}.head h1{font-family:Georgia,'Times New Roman',serif;font-weight:600;font-size:29px;line-height:1.25;margin:11px 0 13px}
+    .lead{font-size:18px;line-height:1.55;font-weight:650;margin:0 0 8px}.sub{font-size:15px;line-height:1.65;color:#6a5b63;margin:0}
+    label{font-weight:700;display:block;margin:18px 0 8px;font-size:15px}
+    input{display:block;width:100%;border:1px solid #dfd4d8;background:#fff;border-radius:12px;padding:13px 14px;min-height:46px;font-size:16px;font-family:inherit;direction:rtl}
+    input:focus{outline:2px solid #db96a9;outline-offset:1px}
+    .hint{font-size:12px;color:#776b70;margin-top:6px}
+    .results{margin-top:12px;display:grid;gap:9px}.song{display:flex;gap:10px;align-items:center;width:100%;border:1px solid #eee0e4;border-radius:14px;padding:10px;text-align:right;background:white}
+    .song.selected{border-color:#af607b;background:#fff7fa}.cover{height:52px;width:52px;border-radius:9px;object-fit:cover;background:#f2e9ec;flex:none}
+    .description{flex:1;min-width:0}.description strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}
+    .description small{display:block;color:#756b70;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .song-actions{display:flex;gap:5px;flex:none}.little{min-height:36px;padding:7px 10px;border:1px solid #e5ccd3;background:#fff;border-radius:10px;cursor:pointer;color:#75445a;font-family:inherit}
+    .choose{background:#7b4661;color:white;border-color:#7b4661}.selected .choose{background:#2c7762;border-color:#2c7762}
+    .preview{width:100%;margin-top:12px}.optional{margin-top:20px;background:#faf6f7;padding:14px;border:1px solid #f0e3e7;border-radius:14px}
+    .optional summary{cursor:pointer;font-weight:700;font-size:14px}.optional p{font-size:13px;color:#75656e;line-height:1.5}.optional label{font-size:13px}
+    .primary{width:100%;border:0;background:#824d65;color:#fff;border-radius:13px;padding:15px;font-size:17px;font-weight:700;cursor:pointer;margin-top:22px;font-family:inherit}
+    .primary:disabled{opacity:.55;cursor:wait}.status{min-height:20px;margin:12px 0 0;text-align:center;font-size:13px;color:#785267}
+    .success{text-align:center;padding:30px 5px}.success h2{font-size:25px}.hidden{display:none!important}
+    .selected-note{font-size:13px;color:#39765e;margin-top:10px}.muted{color:#786d70;font-size:13px}
+    html,body,main,.results,.song{max-width:100%;min-width:0}
+    body{overflow-x:hidden} main{overflow:hidden}
+    .song{flex-wrap:wrap;min-width:0;overflow:hidden}
+    .song-actions{gap:6px;min-width:0}.song-actions button{white-space:nowrap}
+    .inline-player{width:100%;min-width:0;display:block;flex:0 0 100%;margin-top:5px}
+    .change-song{border:1px solid #d7b7c4;border-radius:10px;background:white;color:#75445a;padding:8px 12px;font:inherit;cursor:pointer;margin-top:8px}
+    @media(max-width:420px){body{padding:10px 8px 32px}main{padding:22px 13px;border-radius:18px}.cover{width:46px;height:46px}.song{gap:7px;padding:8px}.song-actions{width:100%;justify-content:flex-end}.song-actions .little{flex:1;max-width:150px}.head h1{font-size:25px}}
+    @media(max-width:340px){.cover{width:40px;height:40px}.song-actions .little{padding:7px}}
+  </style>
+</head>
+<body>
+<main>
+  <section id="formArea">
+    <header class="head"><div class="symbol">💍🎶</div><h1>הפסקול של החתונה שלנו</h1>
+      <p class="lead">לכל אחד יש שיר שעושה לו חשק לרקוד. מה השיר שלכם?</p>
+      <p class="sub">בחרו שיר אחד שהייתם רוצים לשמוע ברחבה, ואנחנו נשתדל לנגן אותו במהלך הערב! ❤️</p>
+    </header>
+    <label for="guest">איך קוראים לכם?</label><input id="guest" maxlength="150" autocomplete="name" placeholder="השם שלכם..." required>
+    <label for="query">איזה שיר תרצו לשמוע?</label><input id="query" maxlength="100" placeholder="חפשו שיר או אמן בעברית או באנגלית..." autocomplete="off">
+    <div class="hint">אפשר להאזין לקטע קצר לפני הבחירה, אם זמין.</div>
+    <div id="searchStatus" class="hint" aria-live="polite"></div>
+    <div id="results" class="results"></div>
+    <div id="selectedNote" class="selected-note hidden" aria-live="polite"></div>
+    <button type="button" id="changeSong" class="change-song hidden">↻ לבחור שיר אחר</button>
+    <details class="optional" id="manualSection"><summary>לא מצאתם את השיר? כתבו אותו כאן (אופציונלי)</summary>
+      <p>אין צורך בקישור. כתבו את שם השיר והמבצע, במקום לבחור שיר בחיפוש.</p>
+      <label for="manualTitle">שם השיר</label><input id="manualTitle" maxlength="150" placeholder="איך קוראים לשיר?">
+      <label for="manualArtist">שם המבצע</label><input id="manualArtist" maxlength="150" placeholder="מי שר אותו?">
+    </details>
+    <button id="send" class="primary" type="button">זה השיר שלי! 🎵</button><p id="status" class="status" role="status"></p>
+  </section>
+  <section class="success hidden" id="thanks"><div style="font-size:50px">💖</div><h2>איזה כיף, תודה!</h2><p>השיר שלכם נוסף לרשימת הבקשות שלנו.</p><p>נתראה ברחבה! 🪩</p></section>
+</main>
+<script>
+  // Paste the existing Apps Script /exec URL between the quotes below.
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzJKVpW4XNqesPT2_RWMQQn3DFVV2byJfjlcbxHBjvZIBMWcIpuDUqzCALbK5T1h_adpg/exec';
+  const $=id=>document.getElementById(id);
+  function request(action, payload={}) {
+    return new Promise((resolve,reject)=>{
+      if(!/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec(?:\?.*)?$/.test(SCRIPT_URL)) {
+        reject(new Error('עדיין לא הוגדר קישור החיבור לגיליון.')); return;
+      }
+      const callback='cb_'+Math.random().toString(36).slice(2)+'_'+Date.now();
+      const url=new URL(SCRIPT_URL);
+      url.searchParams.set('action',action);
+      url.searchParams.set('callback',callback);
+      Object.entries(payload).forEach(([k,v])=>url.searchParams.set(k,String(v??'')));
+      let finished=false;
+      const tag=document.createElement('script');
+      let timeout;
+      const cleanup=()=>{clearTimeout(timeout);tag.remove();delete window[callback]};
+      window[callback]=data=>{if(finished)return; finished=true;cleanup();if(data&&data.ok)resolve(data);else reject(new Error(data?.error||'הפעולה נכשלה.'));};
+      tag.onerror=()=>{if(finished)return;finished=true;cleanup();reject(new Error('לא ניתן להתחבר לשרת.'))};
+      timeout=setTimeout(()=>{if(finished)return;finished=true;cleanup();reject(new Error('החיבור נמשך זמן רב מדי. נסו שוב.'))},18000);
+      tag.src=url.toString();document.head.appendChild(tag);
+    });
+  }
+  let selected=null,timer=null,seq=0,results=[];
+  function el(tag,cls,text){const n=document.createElement(tag);if(cls)n.className=cls;if(text!=null)n.textContent=text;return n}
+  let activePlayer=null;
+  function stopPlayer(){if(activePlayer){activePlayer.pause();activePlayer.removeAttribute('src');activePlayer.load();activePlayer.remove();activePlayer=null;}}
+  function chooseSong(s){
+    stopPlayer();selected=s;
+    $('manualTitle').value='';$('manualArtist').value='';$('manualSection').open=false;
+    $('selectedNote').textContent='✓ בחרתם: '+s.title+' — '+s.artist;
+    $('selectedNote').classList.remove('hidden');
+    $('changeSong').classList.remove('hidden');
+    $('results').replaceChildren();$('searchStatus').textContent='';
+  }
+  function renderResults(items){const wrap=$('results');wrap.replaceChildren();results=items;
+    if(!items.length){$('searchStatus').textContent='לא מצאתם? אפשר להקליד את שם השיר למטה.';return;}
+    $('searchStatus').textContent='בחרו את השיר המתאים:';
+    items.forEach(s=>{
+      const item=el('div','song');
+      const img=el('img','cover');img.src=s.artwork||'';img.alt='עטיפת השיר';img.loading='lazy';item.appendChild(img);
+      const d=el('div','description');d.appendChild(el('strong','',s.title));d.appendChild(el('small','',s.artist));item.appendChild(d);
+      const actions=el('div','song-actions');
+      if(s.preview){const play=el('button','little','▶ האזנה');play.type='button';play.setAttribute('aria-label','להאזנה לשיר '+s.title);
+        play.onclick=()=>{
+          if(activePlayer && activePlayer.parentElement===item){if(activePlayer.paused){activePlayer.play().catch(()=>{$('searchStatus').textContent='לא ניתן להשמיע את הקטע הזה בדפדפן.';});}else{activePlayer.pause();}return;}
+          stopPlayer();const p=el('audio','inline-player');p.controls=true;p.preload='none';p.src=s.preview;item.appendChild(p);activePlayer=p;
+          p.play().catch(()=>{$('searchStatus').textContent='לא ניתן להשמיע את הקטע הזה בדפדפן.';});
+        };actions.appendChild(play);}
+      const choose=el('button','little choose','בחירה');choose.type='button';choose.onclick=()=>chooseSong(s);actions.appendChild(choose);item.appendChild(actions);wrap.appendChild(item);
+    });
+  }
+  $('changeSong').addEventListener('click',()=>{selected=null;$('selectedNote').classList.add('hidden');$('changeSong').classList.add('hidden');$('query').value='';$('results').replaceChildren();$('searchStatus').textContent='';$('query').focus();});
+  $('query').addEventListener('input',()=>{
+    const q=$('query').value.trim();clearTimeout(timer);seq++;const thisSeq=seq;stopPlayer();$('results').replaceChildren();
+    if(q.length<2){$('searchStatus').textContent=q?'הקלידו עוד אות אחת לפחות.':'';return;}
+    $('searchStatus').textContent='מחפשים שירים...';
+    timer=setTimeout(()=>{
+      request('search',{q}).then(data=>{if(thisSeq!==seq)return;renderResults(data.items||[])}).catch(err=>{if(thisSeq!==seq)return;$('searchStatus').textContent='החיפוש לא זמין כרגע. '+err.message+' אפשר לכתוב את השיר ידנית.'});
+    },450);
+  });
+  $('manualTitle').addEventListener('input',()=>{if($('manualTitle').value.trim()){selected=null;stopPlayer();$('selectedNote').classList.add('hidden');$('changeSong').classList.add('hidden');$('results').replaceChildren();$('searchStatus').textContent='';}});
+  $('send').addEventListener('click',()=>{
+    const name=$('guest').value.trim(), manualTitle=$('manualTitle').value.trim(),manualArtist=$('manualArtist').value.trim();
+    if(name.length<2){$('status').textContent='נא לכתוב שם.';$('guest').focus();return;}
+    let payload;
+    if(manualTitle){if(!manualArtist){$('status').textContent='נא לכתוב גם את שם המבצע.';$('manualSection').open=true;$('manualArtist').focus();return;}payload={name,title:manualTitle,artist:manualArtist,source:'manual'};}
+    else if(selected)payload={name,title:selected.title,artist:selected.artist,source:'search',id:selected.id,url:selected.url};
+    else{$('status').textContent='בחרו שיר בתוצאות או הקלידו שם שיר למטה.';return;}
+    $('send').disabled=true;$('send').textContent='שולחים...';$('status').textContent='';
+    request('submit',payload).then(()=>{$('formArea').classList.add('hidden');$('thanks').classList.remove('hidden');stopPlayer()})
+      .catch(err=>{$('status').textContent='לא הצלחנו לשמור. '+err.message;$('send').disabled=false;$('send').textContent='זה השיר שלי! 🎵';});
+  });
+</script>
+</body>
+</html>
